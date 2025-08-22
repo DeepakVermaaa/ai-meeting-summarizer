@@ -1,0 +1,380 @@
+.dynamic-renderer {
+    position: relative;
+    width: 100%;
+    min-height: 200px;
+    
+    /* Smooth transitions for state changes */
+    &.animations-enabled {
+      .components-container {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      
+      .loading-container,
+      .error-container,
+      .empty-container {
+        animation: fadeIn 0.3s ease-in-out;
+      }
+    }
+    
+    /* Loading state styling */
+    &.loading {
+      .components-container {
+        opacity: 0.3;
+        pointer-events: none;
+      }
+    }
+    
+    /* Error state styling */
+    &.has-error {
+      .components-container {
+        display: none;
+      }
+    }
+  }
+  
+  /* Loading State Styles */
+  .loading-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    padding: 2rem;
+    
+    .loading-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      
+      /* Glassmorphism card effect */
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      
+      .loading-text {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+    }
+  }
+  
+  /* Error State Styles */
+  .error-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    padding: 2rem;
+    
+    .error-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      text-align: center;
+      max-width: 400px;
+      
+      /* Glassmorphism card with error styling */
+      background: rgba(244, 67, 54, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(244, 67, 54, 0.3);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 8px 32px rgba(244, 67, 54, 0.1);
+      
+      .error-icon {
+        font-size: 3rem;
+        color: #f44336;
+        margin-bottom: 0.5rem;
+      }
+      
+      .error-title {
+        margin: 0;
+        color: #f44336;
+        font-size: 1.25rem;
+        font-weight: 600;
+      }
+      
+      .error-message {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+      
+      .retry-button {
+        margin-top: 1rem;
+        
+        mat-icon {
+          margin-right: 0.5rem;
+        }
+      }
+    }
+  }
+  
+  /* Empty State Styles */
+  .empty-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    padding: 2rem;
+    
+    .empty-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      text-align: center;
+      max-width: 400px;
+      
+      /* Subtle glassmorphism for empty state */
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 3rem 2rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+      
+      .empty-icon {
+        font-size: 4rem;
+        color: rgba(255, 255, 255, 0.4);
+        margin-bottom: 1rem;
+      }
+      
+      .empty-title {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1.5rem;
+        font-weight: 600;
+      }
+      
+      .empty-message {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 1rem;
+        line-height: 1.5;
+      }
+    }
+  }
+  
+  /* Debug Information Styles */
+  .debug-info {
+    margin: 1rem 0;
+    
+    .debug-details {
+      background: rgba(33, 150, 243, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(33, 150, 243, 0.3);
+      border-radius: 12px;
+      overflow: hidden;
+      
+      .debug-summary {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        cursor: pointer;
+        background: rgba(33, 150, 243, 0.2);
+        color: #2196f3;
+        font-weight: 600;
+        font-size: 0.9rem;
+        
+        &:hover {
+          background: rgba(33, 150, 243, 0.3);
+        }
+        
+        mat-icon {
+          font-size: 1.2rem;
+        }
+      }
+      
+      .debug-content {
+        padding: 1rem;
+        
+        h4 {
+          margin: 0 0 0.5rem 0;
+          color: rgba(255, 255, 255, 0.9);
+          font-size: 0.85rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        
+        .stats-list,
+        .breakdown-list {
+          list-style: none;
+          padding: 0;
+          margin: 0 0 1rem 0;
+          
+          li {
+            padding: 0.25rem 0;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8rem;
+            font-family: 'Courier New', monospace;
+          }
+        }
+        
+        .debug-breakdown {
+          margin-top: 1rem;
+          padding-top: 1rem;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+      }
+    }
+  }
+  
+  /* Components Container Styles */
+  .components-container {
+    position: relative;
+    
+    /* Grid layout for components */
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: 1fr;
+    
+    /* Responsive grid */
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    }
+    
+    @media (min-width: 1200px) {
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    }
+    
+    /* Component wrapper styling */
+    > * {
+      /* Glassmorphism effect for each component */
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      
+      /* Smooth hover effects */
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+    }
+    
+    /* Hidden state for loading */
+    &.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+  }
+  
+  /* Render Summary Styles */
+  .render-summary {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    text-align: center;
+    
+    .summary-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      
+      background: rgba(76, 175, 80, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(76, 175, 80, 0.3);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      
+      .summary-text {
+        color: #4caf50;
+        font-size: 0.85rem;
+        font-weight: 500;
+      }
+      
+      .summary-time {
+        color: rgba(76, 175, 80, 0.7);
+        font-size: 0.8rem;
+        font-weight: 400;
+      }
+    }
+  }
+  
+  /* Animation Keyframes */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 767px) {
+    .dynamic-renderer {
+      .loading-container,
+      .error-container,
+      .empty-container {
+        padding: 1rem;
+        
+        .loading-content,
+        .error-content,
+        .empty-content {
+          padding: 1.5rem;
+        }
+      }
+      
+      .components-container {
+        gap: 1rem;
+      }
+    }
+  }
+  
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .dynamic-renderer {
+      .loading-content,
+      .error-content,
+      .empty-content {
+        background: rgba(0, 0, 0, 0.8);
+        border: 2px solid currentColor;
+      }
+      
+      .components-container > * {
+        background: rgba(0, 0, 0, 0.8);
+        border: 2px solid rgba(255, 255, 255, 0.5);
+      }
+    }
+  }
+  
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .dynamic-renderer {
+      &.animations-enabled {
+        .components-container,
+        .loading-container,
+        .error-container,
+        .empty-container {
+          transition: none;
+          animation: none;
+        }
+      }
+      
+      .components-container > * {
+        transition: none;
+        
+        &:hover {
+          transform: none;
+        }
+      }
+    }
+  }

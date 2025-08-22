@@ -1,0 +1,253 @@
+<!-- Timeline Component - Shows chronological events and milestones -->
+<div class="timeline-component glass-container" 
+     [ngClass]="{'expanded': isExpanded, 'compact': !isExpanded}">
+  
+  <!-- Component Header -->
+  <div class="component-header">
+    <div class="title-section">
+      <mat-icon class="component-icon">timeline</mat-icon>
+      <h2 class="component-title">{{ data.title || 'Timeline' }}</h2>
+      <span class="event-count" *ngIf="data?.events?.length">
+        {{ formatCount(data.events.length || 0, 'event', 'events') }}
+      </span>
+    </div>
+
+    <div class="header-actions">
+      <!-- Expand/Collapse Button -->
+      <button mat-icon-button 
+              [matTooltip]="isExpanded ? 'Collapse' : 'Expand'"
+              (click)="toggleExpanded()">
+        <mat-icon>{{ isExpanded ? 'unfold_less' : 'unfold_more' }}</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Component Description (if provided) -->
+  <div class="component-description" *ngIf="data?.description">
+    <p>{{ data.description }}</p>
+  </div>
+
+  <!-- Timeline Controls -->
+  <div class="timeline-controls" *ngIf="isExpanded">
+    <!-- View Mode Selector -->
+    <div class="view-mode-selector">
+      <span class="control-label">View Mode:</span>
+      <div class="mode-buttons">
+        <button mat-stroked-button 
+                [ngClass]="{'active': viewMode === 'monthly'}"
+                (click)="changeViewMode('monthly')">
+          Monthly
+        </button>
+        <button mat-stroked-button 
+                [ngClass]="{'active': viewMode === 'weekly'}"
+                (click)="changeViewMode('weekly')">
+          Weekly
+        </button>
+        <button mat-stroked-button 
+                [ngClass]="{'active': viewMode === 'daily'}"
+                (click)="changeViewMode('daily')">
+          Daily
+        </button>
+      </div>
+    </div>
+
+    <!-- Status Filter -->
+    <div class="status-filter">
+      <span class="control-label">Filter:</span>
+      <div class="filter-buttons">
+        <button mat-stroked-button 
+                [ngClass]="{'active': statusFilter === 'all'}"
+                (click)="changeStatusFilter('all')">
+          All
+        </button>
+        <button mat-stroked-button 
+                [ngClass]="{'active': statusFilter === 'upcoming'}"
+                (click)="changeStatusFilter('upcoming')">
+          Upcoming
+        </button>
+        <button mat-stroked-button 
+                [ngClass]="{'active': statusFilter === 'in_progress'}"
+                (click)="changeStatusFilter('in_progress')">
+          In Progress
+        </button>
+        <button mat-stroked-button 
+                [ngClass]="{'active': statusFilter === 'completed'}"
+                (click)="changeStatusFilter('completed')">
+          Completed
+        </button>
+        <button mat-stroked-button 
+                [ngClass]="{'active': statusFilter === 'delayed'}"
+                (click)="changeStatusFilter('delayed')">
+          Delayed
+        </button>
+      </div>
+    </div>
+
+    <!-- Timeline Actions -->
+    <div class="timeline-actions">
+      <button mat-button 
+              color="primary"
+              (click)="toggleAllDetails()">
+        {{ showAllDetails ? 'Hide All Details' : 'Show All Details' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!filteredEvents?.length">
+    <mat-icon class="empty-icon">event_busy</mat-icon>
+    <p class="empty-message">
+      No events {{ statusFilter !== 'all' ? 'with ' + statusFilter + ' status' : '' }} found.
+    </p>
+  </div>
+
+  <!-- Timeline Display -->
+  <div class="timeline-container" *ngIf="filteredEvents?.length">
+    <!-- Timeline by Date Groups -->
+    <div class="timeline-groups">
+      <div class="date-group" *ngFor="let group of dateGroups | keyvalue">
+        <!-- Date Group Header -->
+        <div class="date-header">
+          <div class="date-indicator"></div>
+          <h3 class="date-title">{{ getDateGroupHeader(group.key) }}</h3>
+        </div>
+
+        <!-- Events for this date group -->
+        <div class="timeline-events">
+          <div class="event-card" 
+               *ngFor="let event of group.value"
+               [ngClass]="[getStatusClass(event.status)]">
+            
+            <!-- Event Header -->
+            <div class="event-header" (click)="toggleEventDetails(event.id)">
+              <div class="event-type-icon">
+                <mat-icon [matTooltip]="event.type || 'Event'">{{ getEventTypeIcon(event.type) }}</mat-icon>
+              </div>
+              
+              <div class="event-info">
+                <h3 class="event-title">{{ event.milestone }}</h3>
+                <div class="event-meta">
+                  <span class="event-date">{{ formatDate(event.date) }}</span>
+                  <span class="event-status">{{ event.status | titlecase }}</span>
+                  <span class="event-owner" *ngIf="event.owner">Owner: {{ event.owner }}</span>
+                  <span class="event-relative-time" [ngClass]="{'past-date': isDatePast(event.date)}">
+                    {{ getRelativeTime(event.date) }}
+                  </span>
+                </div>
+              </div>
+              
+              <div class="event-actions">
+                <button mat-icon-button [matTooltip]="expandedEvents.has(event.id) ? 'Hide Details' : 'Show Details'">
+                  <mat-icon>{{ expandedEvents.has(event.id) ? 'expand_less' : 'expand_more' }}</mat-icon>
+                </button>
+              </div>
+            </div>
+
+            <!-- Event Details (Expandable) -->
+            <div class="event-details" *ngIf="expandedEvents.has(event.id)">
+              <div class="event-description" *ngIf="event.description">
+                <h4>Description:</h4>
+                <p>{{ event.description }}</p>
+              </div>
+              
+              <div class="event-metadata">
+                <div class="metadata-item">
+                  <span class="metadata-label">Date:</span>
+                  <span class="metadata-value">{{ formatFullDate(event.date) }}</span>
+                </div>
+                
+                <div class="metadata-item" *ngIf="event.owner">
+                  <span class="metadata-label">Owner:</span>
+                  <span class="metadata-value">{{ event.owner }}</span>
+                </div>
+                
+                <div class="metadata-item" *ngIf="event.type">
+                  <span class="metadata-label">Type:</span>
+                  <span class="metadata-value">{{ event.type | titlecase }}</span>
+                </div>
+                
+                <div class="metadata-item" *ngIf="event.dependencies?.length">
+                  <span class="metadata-label">Dependencies:</span>
+                  <span class="metadata-value">
+                    <ul class="dependencies-list">
+                      <li *ngFor="let depId of event.dependencies">
+                        {{ getEventNameById(depId) || depId }}
+                      </li>
+                    </ul>
+                  </span>
+                </div>
+              </div>
+              
+              <!-- Status Controls -->
+              <div class="status-controls">
+                <h4>Update Status:</h4>
+                <div class="status-buttons">
+                  <button mat-stroked-button 
+                          [ngClass]="{'active': event.status === 'upcoming'}"
+                          (click)="updateEventStatus(event.id, 'upcoming')">
+                    Upcoming
+                  </button>
+                  <button mat-stroked-button 
+                          [ngClass]="{'active': event.status === 'in_progress'}"
+                          (click)="updateEventStatus(event.id, 'in_progress')">
+                    In Progress
+                  </button>
+                  <button mat-stroked-button 
+                          [ngClass]="{'active': event.status === 'completed'}"
+                          (click)="updateEventStatus(event.id, 'completed')">
+                    Completed
+                  </button>
+                  <button mat-stroked-button 
+                          [ngClass]="{'active': event.status === 'delayed'}"
+                          (click)="updateEventStatus(event.id, 'delayed')">
+                    Delayed
+                  </button>
+                  <button mat-stroked-button 
+                          [ngClass]="{'active': event.status === 'cancelled'}"
+                          (click)="updateEventStatus(event.id, 'cancelled')">
+                    Cancelled
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Stats -->
+  <div class="component-footer" *ngIf="data?.events?.length && isExpanded">
+    <div class="footer-stats">
+      <div class="stat-item">
+        <span class="stat-label">Upcoming:</span>
+        <span class="stat-value">{{ getStatusCount('upcoming') }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">In Progress:</span>
+        <span class="stat-value">{{ getStatusCount('in_progress') }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Completed:</span>
+        <span class="stat-value">{{ getStatusCount('completed') }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Delayed:</span>
+        <span class="stat-value">{{ getStatusCount('delayed') }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Cancelled:</span>
+        <span class="stat-value">{{ getStatusCount('cancelled') }}</span>
+      </div>
+    </div>
+    
+    <div class="footer-info">
+      <span class="filter-info" *ngIf="isFiltered">
+        Filtered: {{ getFilteredCount() }} of {{ getTotalCount() }} events
+      </span>
+      <span class="date-range" *ngIf="data?.start_date && data?.end_date">
+        {{ formatDate(data.start_date) }} - {{ formatDate(data.end_date) }}
+      </span>
+    </div>
+  </div>
+</div>

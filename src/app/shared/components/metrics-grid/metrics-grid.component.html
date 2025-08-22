@@ -1,0 +1,153 @@
+<!-- Metrics Grid Component - Shows KPIs and statistics -->
+<div class="metrics-grid-component glass-container" 
+     [ngClass]="{'expanded': isExpanded, 'compact': !isExpanded}">
+  
+  <!-- Component Header -->
+  <div class="component-header">
+    <div class="title-section">
+      <mat-icon class="component-icon">dashboard</mat-icon>
+      <h2 class="component-title">{{ data.title || 'Metrics & KPIs' }}</h2>
+      <span class="metric-count" *ngIf="data?.metrics?.length">
+        {{ formatCount(data.metrics.length || 0, 'metric', 'metrics') }}
+      </span>
+    </div>
+
+    <div class="header-actions">
+      <!-- Expand/Collapse Button -->
+      <button mat-icon-button 
+              [matTooltip]="isExpanded ? 'Collapse' : 'Expand'"
+              (click)="toggleExpanded()">
+        <mat-icon>{{ isExpanded ? 'unfold_less' : 'unfold_more' }}</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Component Description (if provided) -->
+  <div class="component-description" *ngIf="data?.description">
+    <p>{{ data.description }}</p>
+  </div>
+
+  <!-- Metrics Controls -->
+  <div class="metrics-controls" *ngIf="isExpanded">
+    <!-- Layout Mode Selector -->
+    <div class="layout-selector">
+      <span class="control-label">Layout:</span>
+      <div class="layout-buttons">
+        <button mat-icon-button 
+                [ngClass]="{'active': layoutMode === 'grid'}"
+                [matTooltip]="'Grid View'"
+                (click)="changeLayoutMode('grid')">
+          <mat-icon>grid_view</mat-icon>
+        </button>
+        <button mat-icon-button 
+                [ngClass]="{'active': layoutMode === 'list'}"
+                [matTooltip]="'List View'"
+                (click)="changeLayoutMode('list')">
+          <mat-icon>view_list</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Category Filter -->
+    <div class="category-filter" *ngIf="categories.length > 0">
+      <span class="control-label">Filter:</span>
+      <div class="filter-buttons">
+        <button mat-stroked-button 
+                [ngClass]="{'active': categoryFilter === 'all'}"
+                (click)="changeCategoryFilter('all')">
+          All
+        </button>
+        <button mat-stroked-button 
+                *ngFor="let category of categories"
+                [ngClass]="{'active': categoryFilter === category}"
+                (click)="changeCategoryFilter(category)">
+          {{ category | titlecase }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Sort Controls -->
+    <div class="sort-controls">
+      <span class="control-label">Sort:</span>
+      <mat-form-field appearance="outline" class="sort-select">
+        <mat-select [value]="sortMethod" (selectionChange)="changeSortMethod($event.value)">
+          <mat-option value="none">Default Order</mat-option>
+          <mat-option value="value-desc">Highest Value First</mat-option>
+          <mat-option value="value-asc">Lowest Value First</mat-option>
+          <mat-option value="alpha-asc">Name (A-Z)</mat-option>
+          <mat-option value="alpha-desc">Name (Z-A)</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!filteredMetrics?.length">
+    <mat-icon class="empty-icon">insights</mat-icon>
+    <p class="empty-message">
+      No metrics {{ categoryFilter !== 'all' ? 'in ' + categoryFilter + ' category' : '' }} found.
+    </p>
+  </div>
+
+  <!-- Metrics Grid -->
+  <div class="metrics-container" *ngIf="filteredMetrics?.length" [ngClass]="{'grid-layout': layoutMode === 'grid', 'list-layout': layoutMode === 'list'}">
+    <!-- Grid Layout -->
+    <div class="metric-card" 
+         *ngFor="let metric of filteredMetrics"
+         [ngClass]="[getColorClass(metric.color)]">
+      
+      <div class="metric-header">
+        <div class="metric-icon">
+          <mat-icon>{{ getMetricIcon(metric.icon) }}</mat-icon>
+        </div>
+        <div class="metric-label">{{ metric.label }}</div>
+        <div class="metric-trend" *ngIf="metric.trend" [ngClass]="[getTrendClass(metric.trend)]">
+          <mat-icon>{{ getTrendIcon(metric.trend) }}</mat-icon>
+        </div>
+      </div>
+      
+      <div class="metric-value">
+        {{ formatValueWithUnit(metric.value, metric.unit) }}
+      </div>
+      
+      <div class="metric-comparison" *ngIf="hasComparisonData(metric)">
+        <div class="previous-value" *ngIf="metric.previous_value">
+          <span class="comparison-label">Previous:</span>
+          <span class="comparison-value">{{ formatValueWithUnit(metric.previous_value, metric.unit) }}</span>
+          <span class="percent-change" *ngIf="metric.previous_value">
+            {{ calculatePercentChange(metric.value, metric.previous_value) }}
+          </span>
+        </div>
+        
+        <div class="target-value" *ngIf="metric.target">
+          <span class="comparison-label">Target:</span>
+          <span class="comparison-value">{{ formatValueWithUnit(metric.target, metric.unit) }}</span>
+        </div>
+      </div>
+      
+      <div class="metric-description" *ngIf="metric.description">
+        {{ metric.description }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Stats -->
+  <div class="component-footer" *ngIf="data?.metrics?.length && isExpanded">
+    <div class="footer-stats">
+      <div class="stat-item" *ngIf="data?.last_updated">
+        <span class="stat-label">Last Updated:</span>
+        <span class="stat-value">{{ data.last_updated | date:'medium' }}</span>
+      </div>
+      <div class="stat-item" *ngIf="data?.source">
+        <span class="stat-label">Source:</span>
+        <span class="stat-value">{{ data.source }}</span>
+      </div>
+    </div>
+    
+    <div class="footer-info">
+      <span class="filter-info" *ngIf="isFiltered">
+        Showing {{ getFilteredCount() }} of {{ getTotalCount() }} metrics
+      </span>
+    </div>
+  </div>
+</div>

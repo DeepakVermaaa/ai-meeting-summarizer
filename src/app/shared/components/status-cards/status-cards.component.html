@@ -1,0 +1,218 @@
+<!-- Status Cards Component - Shows department/project status overviews -->
+<div class="status-cards-component glass-container" 
+     [ngClass]="{'expanded': isExpanded, 'compact': !isExpanded}">
+  
+  <!-- Component Header -->
+  <div class="component-header">
+    <div class="title-section">
+      <mat-icon class="component-icon">assignment</mat-icon>
+      <h2 class="component-title">{{ data.title || 'Status Cards' }}</h2>
+      <span class="card-count" *ngIf="data?.cards?.length">
+        {{ formatCount(data.cards.length || 0, 'item', 'items') }}
+      </span>
+    </div>
+
+    <div class="header-actions">
+      <!-- Expand/Collapse Button -->
+      <button mat-icon-button 
+              [matTooltip]="isExpanded ? 'Collapse' : 'Expand'"
+              (click)="toggleExpanded()">
+        <mat-icon>{{ isExpanded ? 'unfold_less' : 'unfold_more' }}</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Component Description (if provided) -->
+  <div class="component-description" *ngIf="data?.description">
+    <p>{{ data.description }}</p>
+  </div>
+
+  <!-- Status Controls -->
+  <div class="status-controls" *ngIf="isExpanded">
+    <!-- Layout Mode Selector -->
+    <div class="layout-selector">
+      <span class="control-label">Layout:</span>
+      <div class="layout-buttons">
+        <button mat-icon-button 
+                [ngClass]="{'active': layoutMode === 'grid'}"
+                [matTooltip]="'Grid View'"
+                (click)="changeLayoutMode('grid')">
+          <mat-icon>grid_view</mat-icon>
+        </button>
+        <button mat-icon-button 
+                [ngClass]="{'active': layoutMode === 'row'}"
+                [matTooltip]="'Row View'"
+                (click)="changeLayoutMode('row')">
+          <mat-icon>view_stream</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Status Filter -->
+    <div class="status-filter" *ngIf="statuses.length > 0">
+      <span class="control-label">Filter:</span>
+      <div class="filter-buttons">
+        <button mat-stroked-button 
+                [ngClass]="{'active': statusFilter === 'all'}"
+                (click)="changeStatusFilter('all')">
+          All
+        </button>
+        <button mat-stroked-button 
+                *ngFor="let status of statuses"
+                [class.active]="statusFilter === status"
+                [class]="getStatusClass(status)"
+                (click)="changeStatusFilter(status)">
+          {{ status | titlecase | replace:'_':' ' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!filteredCards?.length">
+    <mat-icon class="empty-icon">assignment_late</mat-icon>
+    <p class="empty-message">
+      No status cards {{ statusFilter !== 'all' ? 'with ' + statusFilter + ' status' : '' }} found.
+    </p>
+  </div>
+
+  <!-- Status Cards Grid/Row -->
+  <div class="cards-container" *ngIf="filteredCards?.length" [ngClass]="{'grid-layout': layoutMode === 'grid', 'row-layout': layoutMode === 'row'}">
+    <!-- Card Items -->
+    <div class="status-card" 
+         *ngFor="let card of filteredCards"
+         [ngClass]="[getColorClass(card.color), getStatusClass(card.status)]">
+      
+      <!-- Card Header -->
+      <div class="card-header" (click)="toggleCardDetails(card.id)">
+        <div class="status-icon">
+          <mat-icon>{{ getCardIcon(card.icon) }}</mat-icon>
+        </div>
+        <div class="card-title-section">
+          <h3 class="card-title">{{ card.title }}</h3>
+          <div class="card-status">{{ card.status | titlecase | replace:'_':' ' }}</div>
+        </div>
+        <div class="card-actions">
+          <button mat-icon-button [matTooltip]="expandedCardIds.has(card.id) ? 'Hide Details' : 'Show Details'">
+            <mat-icon>{{ expandedCardIds.has(card.id) ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Card Value -->
+      <div class="card-value" *ngIf="card.value">{{ card.value }}</div>
+      
+      <!-- Progress Bar (if progress provided) -->
+      <div class="card-progress" *ngIf="card.progress !== undefined">
+        <div class="progress-text">
+          <span class="progress-label">Progress:</span>
+          <span class="progress-value">{{ card.progress }}%</span>
+        </div>
+        <mat-progress-bar
+          [value]="card.progress"
+          [color]="card.progress < 30 ? 'warn' : card.progress < 70 ? 'accent' : 'primary'">
+        </mat-progress-bar>
+      </div>
+      
+      <!-- Card Details (Expandable) -->
+      <div class="card-details" *ngIf="expandedCardIds.has(card.id)">
+        <!-- Card Description -->
+        <div class="card-description" *ngIf="card.description">
+          <p>{{ card.description }}</p>
+        </div>
+        
+        <!-- Additional Details -->
+        <div class="details-list" *ngIf="card.details?.length">
+          <div class="detail-item" *ngFor="let detail of card.details">
+            <span class="detail-key">{{ detail.key }}:</span>
+            <span class="detail-value">{{ detail.value }}</span>
+          </div>
+        </div>
+        
+        <!-- Last Updated -->
+        <div class="last-updated" *ngIf="card.last_updated">
+          <span class="updated-label">Updated:</span>
+          <span class="updated-value">{{ getRelativeTime(card.last_updated) }}</span>
+        </div>
+        
+        <!-- Status Controls -->
+        <div class="status-controls">
+          <h4>Update Status:</h4>
+          <div class="status-buttons">
+            <button mat-stroked-button 
+                    [ngClass]="{'active': card.status === 'not_started'}"
+                    (click)="updateCardStatus(card.id, 'not_started')">
+              Not Started
+            </button>
+            <button mat-stroked-button 
+                    [ngClass]="{'active': card.status === 'on_track'}"
+                    (click)="updateCardStatus(card.id, 'on_track')">
+              On Track
+            </button>
+            <button mat-stroked-button 
+                    [ngClass]="{'active': card.status === 'at_risk'}"
+                    (click)="updateCardStatus(card.id, 'at_risk')">
+              At Risk
+            </button>
+            <button mat-stroked-button 
+                    [ngClass]="{'active': card.status === 'blocked'}"
+                    (click)="updateCardStatus(card.id, 'blocked')">
+              Blocked
+            </button>
+            <button mat-stroked-button 
+                    [ngClass]="{'active': card.status === 'completed'}"
+                    (click)="updateCardStatus(card.id, 'completed')">
+              Completed
+            </button>
+          </div>
+        </div>
+        
+        <!-- Progress Update (if applicable) -->
+        <div class="progress-update" *ngIf="card.progress !== undefined">
+          <h4>Update Progress:</h4>
+          <div class="progress-inputs">
+            <mat-form-field appearance="outline" class="progress-field">
+              <mat-label>Progress (%)</mat-label>
+              <input matInput type="number" min="0" max="100" [value]="card.progress" #progressInput>
+            </mat-form-field>
+            <button mat-stroked-button color="primary" (click)="updateCardProgress(card.id, +progressInput.value)">
+              Update
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Stats -->
+  <div class="component-footer" *ngIf="data?.cards?.length && isExpanded">
+    <div class="footer-stats">
+      <div class="stat-item" *ngIf="getStatusCount('on_track') > 0">
+        <span class="stat-label">On Track:</span>
+        <span class="stat-value">{{ getStatusCount('on_track') }}</span>
+      </div>
+      <div class="stat-item" *ngIf="getStatusCount('at_risk') > 0">
+        <span class="stat-label">At Risk:</span>
+        <span class="stat-value">{{ getStatusCount('at_risk') }}</span>
+      </div>
+      <div class="stat-item" *ngIf="getStatusCount('blocked') > 0">
+        <span class="stat-label">Blocked:</span>
+        <span class="stat-value">{{ getStatusCount('blocked') }}</span>
+      </div>
+      <div class="stat-item" *ngIf="getStatusCount('completed') > 0">
+        <span class="stat-label">Completed:</span>
+        <span class="stat-value">{{ getStatusCount('completed') }}</span>
+      </div>
+      <div class="stat-item" *ngIf="getStatusCount('not_started') > 0">
+        <span class="stat-label">Not Started:</span>
+        <span class="stat-value">{{ getStatusCount('not_started') }}</span>
+      </div>
+    </div>
+    
+    <div class="footer-info">
+      <span class="filter-info" *ngIf="isFiltered">
+        Showing {{ getFilteredCount() }} of {{ getTotalCount() }} cards
+      </span>
+    </div>
+  </div>
+</div>

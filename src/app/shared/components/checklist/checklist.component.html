@@ -1,0 +1,305 @@
+<div class="checklist-component" 
+     [class]="displayMode + '-mode'"
+     [class.collapsible]="isCollapsible"
+     [class.expanded]="isExpanded"
+     [class.collapsed]="isCollapsible && !isExpanded">
+
+  <!-- Component Header -->
+  <div class="checklist-header" (click)="isCollapsible ? toggleExpanded() : null">
+    <div class="header-content">
+      
+      <!-- Title and Description -->
+      <div class="title-section" *ngIf="hasTitle() || hasDescription()">
+        <h3 class="section-title" *ngIf="hasTitle()">
+          <mat-icon class="title-icon" [attr.aria-hidden]="true">assignment</mat-icon>
+          {{ getTitle() }}
+        </h3>
+        <p class="section-description" *ngIf="hasDescription()">
+          {{ data.description }}
+        </p>
+      </div>
+
+      <!-- Header Actions -->
+      <div class="header-actions" (click)="$event.stopPropagation()">
+        <!-- Copy Checklist Button -->
+        <button mat-icon-button 
+                class="action-button copy-button"
+                (click)="copyChecklist()"
+                matTooltip="Copy checklist"
+                [attr.aria-label]="'Copy checklist'">
+          <mat-icon>content_copy</mat-icon>
+        </button>
+
+        <!-- Expand/Collapse Button -->
+        <button mat-icon-button 
+                class="action-button toggle-button"
+                *ngIf="isCollapsible"
+                (click)="toggleExpanded()"
+                [matTooltip]="isExpanded ? 'Collapse' : 'Expand'"
+                [attr.aria-label]="isExpanded ? 'Collapse checklist' : 'Expand checklist'">
+          <mat-icon>{{ isExpanded ? 'expand_less' : 'expand_more' }}</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-section" *ngIf="showProgress && data?.total_items && data.total_items > 0">
+      <div class="progress-info">
+        <span class="progress-text">
+          {{ data.completed }} of {{ data.total_items }} completed
+        </span>
+        <span class="progress-percentage">
+          {{ completionPercentage }}%
+        </span>
+      </div>
+      <mat-progress-bar 
+        mode="determinate" 
+        [value]="completionPercentage"
+        class="progress-bar"
+        [class.completed]="completionPercentage === 100">
+      </mat-progress-bar>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="checklist-content" 
+       [@expandCollapse]="animationState"
+       #checklistContent>
+
+    <!-- Filters and Controls (Expanded Mode Only) -->
+    <div class="checklist-controls" *ngIf="displayMode === 'expanded' && data?.items && data.items.length > 3">
+      
+      <!-- Bulk Actions -->
+      <div class="bulk-actions" *ngIf="bulkActionsEnabled && displayItems.length > 0">
+        <mat-checkbox 
+          [checked]="allItemsSelected"
+          [indeterminate]="selectedItems.size > 0 && !allItemsSelected"
+          (change)="toggleAllItemsSelection($event)"
+          class="bulk-select-checkbox">
+          Select All
+        </mat-checkbox>
+        
+        <div class="bulk-buttons" *ngIf="selectedItems.size > 0">
+          <button mat-button 
+                  class="bulk-button complete-button"
+                  (click)="markSelectedAsComplete()">
+            <mat-icon>check_circle</mat-icon>
+            Complete ({{ selectedItems.size }})
+          </button>
+          <button mat-button 
+                  class="bulk-button incomplete-button"
+                  (click)="markSelectedAsIncomplete()">
+            <mat-icon>radio_button_unchecked</mat-icon>
+            Mark Incomplete
+          </button>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-section">
+        <!-- Status Filter -->
+        <mat-form-field class="filter-field" appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select [value]="filters.status" (selectionChange)="applyFilter('status', $event.value)">
+            <mat-option value="all">All Tasks</mat-option>
+            <mat-option value="pending">Pending</mat-option>
+            <mat-option value="in_progress">In Progress</mat-option>
+            <mat-option value="completed">Completed</mat-option>
+            <mat-option value="blocked">Blocked</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Priority Filter -->
+        <mat-form-field class="filter-field" appearance="outline">
+          <mat-label>Priority</mat-label>
+          <mat-select [value]="filters.priority" (selectionChange)="applyFilter('priority', $event.value)">
+            <mat-option value="all">All Priorities</mat-option>
+            <mat-option value="high">High Priority</mat-option>
+            <mat-option value="medium">Medium Priority</mat-option>
+            <mat-option value="low">Low Priority</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Sort Options -->
+        <div class="sort-buttons">
+          <button mat-icon-button 
+                  [class.active]="sortBy === 'priority'"
+                  (click)="changeSorting('priority')"
+                  matTooltip="Sort by Priority">
+            <mat-icon>flag</mat-icon>
+          </button>
+          <button mat-icon-button 
+                  [class.active]="sortBy === 'due_date'"
+                  (click)="changeSorting('due_date')"
+                  matTooltip="Sort by Due Date">
+            <mat-icon>schedule</mat-icon>
+          </button>
+          <button mat-icon-button 
+                  [class.active]="sortBy === 'status'"
+                  (click)="changeSorting('status')"
+                  matTooltip="Sort by Status">
+            <mat-icon>radio_button_checked</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Checklist Items -->
+    <div class="checklist-items" *ngIf="displayItems && displayItems.length > 0">
+      <div *ngFor="let item of displayItems; trackBy: trackByItemId"
+           class="checklist-item"
+           [@fadeIn]
+           [class]="getStatusClass(item.status) + ' ' + getPriorityClass(item.priority)"
+           [class.overdue]="isItemOverdue(item)"
+           [class.selected]="selectedItems.has(item.id)">
+
+        <!-- Item Content -->
+        <div class="item-content">
+          
+          <!-- Bulk Selection Checkbox (Expanded Mode) -->
+          <mat-checkbox *ngIf="bulkActionsEnabled && displayMode === 'expanded'"
+                        [checked]="selectedItems.has(item.id)"
+                        (change)="toggleItemSelection(item, $event)"
+                        class="item-select-checkbox"
+                        [attr.aria-label]="'Select task: ' + item.task">
+          </mat-checkbox>
+
+          <!-- Completion Checkbox -->
+          <mat-checkbox 
+            [checked]="item.status === 'completed'"
+            (change)="toggleItemCompletion(item, $event)"
+            class="completion-checkbox"
+            [class.completed]="item.status === 'completed'"
+            [attr.aria-label]="'Mark task as ' + (item.status === 'completed' ? 'incomplete' : 'complete')">
+          </mat-checkbox>
+
+          <!-- Task Details -->
+          <div class="task-details">
+            <!-- Task Text -->
+            <div class="task-text" 
+                 [class.completed]="item.status === 'completed'">
+              {{ item.task }}
+            </div>
+
+            <!-- Task Metadata (Expanded Mode) -->
+            <div class="task-metadata" *ngIf="displayMode === 'expanded'">
+              
+              <!-- Priority Indicator -->
+              <span class="priority-indicator" 
+                    [class]="getPriorityClass(item.priority)"
+                    [matTooltip]="item.priority + ' priority'">
+                <mat-icon class="priority-icon">
+                  {{ item.priority === 'high' ? 'priority_high' : 
+                     item.priority === 'medium' ? 'drag_handle' : 'low_priority' }}
+                </mat-icon>
+                {{ item.priority }}
+              </span>
+
+              <!-- Owner -->
+              <span class="owner-info" *ngIf="item.owner">
+                <mat-icon class="owner-icon">person</mat-icon>
+                {{ item.owner }}
+              </span>
+
+              <!-- Due Date -->
+              <span class="due-date" 
+                    *ngIf="item.due_date"
+                    [class.overdue]="isItemOverdue(item)"
+                    [matTooltip]="isItemOverdue(item) ? 'Overdue' : 'Due date'">
+                <mat-icon class="date-icon">schedule</mat-icon>
+                {{ formatDate(item.due_date) }}
+                <span class="days-info" *ngIf="!isItemOverdue(item) && getDaysUntilDue(item.due_date) <= 7">
+                  ({{ getDaysUntilDue(item.due_date) }}d)
+                </span>
+              </span>
+
+              <!-- Estimated Hours -->
+              <span class="estimated-hours" *ngIf="item.estimated_hours">
+                <mat-icon class="hours-icon">access_time</mat-icon>
+                {{ item.estimated_hours }}h
+              </span>
+
+              <!-- Status Indicator -->
+              <span class="status-indicator" 
+                    [class]="getStatusClass(item.status)"
+                    *ngIf="item.status !== 'pending'">
+                <mat-icon class="status-icon">
+                  {{ item.status === 'completed' ? 'check_circle' : 
+                     item.status === 'in_progress' ? 'pending' : 
+                     item.status === 'blocked' ? 'block' : 'radio_button_unchecked' }}
+                </mat-icon>
+                {{ item.status.replace('_', ' ') }}
+              </span>
+
+              <!-- Tags -->
+              <div class="tags-container" *ngIf="item.tags?.length">
+                <span *ngFor="let tag of item.tags" class="task-tag">
+                  {{ tag }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Dependencies (Expanded Mode) -->
+            <div class="dependencies" *ngIf="item.dependencies && item.dependencies.length > 0 && displayMode === 'expanded'">
+              <mat-icon class="dependency-icon">link</mat-icon>
+              <span class="dependency-text">
+                Depends on {{ item.dependencies.length }} other task{{ item.dependencies.length > 1 ? 's' : '' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Overdue Warning Banner -->
+        <div class="overdue-warning" *ngIf="isItemOverdue(item)">
+          <mat-icon class="warning-icon">warning</mat-icon>
+          <span class="warning-text">
+            Overdue by {{ Math.abs(getDaysUntilDue(item.due_date)) }} day{{ Math.abs(getDaysUntilDue(item.due_date)) > 1 ? 's' : '' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-checklist" *ngIf="(!displayItems || displayItems.length === 0)">
+      <mat-icon class="empty-icon">checklist</mat-icon>
+      <h4 class="empty-title">No Tasks Found</h4>
+      <p class="empty-message" *ngIf="data.items && data.items.length > 0">
+        Try adjusting your filters to see more tasks.
+      </p>
+      <p class="empty-message" *ngIf="!data.items || data.items.length === 0">
+        No tasks have been added to this checklist yet.
+      </p>
+    </div>
+
+    <!-- Summary Stats (Compact Mode) -->
+    <div class="compact-summary" *ngIf="displayMode === 'compact' && data?.total_items && data.total_items > 0">
+      <div class="summary-stats">
+        <div class="stat-item">
+          <span class="stat-value">{{ data.completed }}</span>
+          <span class="stat-label">Completed</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ data.total_items - data.completed }}</span>
+          <span class="stat-label">Remaining</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">{{ completionPercentage }}%</span>
+          <span class="stat-label">Progress</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Information (Minimal Mode) -->
+  <div class="checklist-footer" *ngIf="displayMode === 'minimal' && data?.total_items">
+    <div class="footer-stats">
+      <span class="quick-progress">
+        {{ data.completed || 0 }}/{{ data.total_items || 0 }} complete
+      </span>
+      <span class="quick-percentage">
+        ({{ completionPercentage }}%)
+      </span>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,62 @@
+<div class="dynamic-renderer" 
+     [class.loading]="isRendering" 
+     [class.has-error]="renderErrorMessage"
+     [class.animations-enabled]="enableAnimations">
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="showLoading && isRendering">
+    <div class="loading-content">
+      <mat-progress-spinner 
+        mode="indeterminate" 
+        diameter="40"
+        strokeWidth="4">
+      </mat-progress-spinner>
+      <p class="loading-text">Rendering components...</p>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-container" *ngIf="renderErrorMessage && !isRendering">
+    <div class="error-content">
+      <mat-icon class="error-icon">error_outline</mat-icon>
+      <h3 class="error-title">Rendering Failed</h3>
+      <p class="error-message">{{ renderErrorMessage }}</p>
+      <button mat-raised-button 
+              color="primary" 
+              (click)="retryRender()"
+              class="retry-button">
+        <mat-icon>refresh</mat-icon>
+        Retry
+      </button>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-container" *ngIf="!aguiMessage?.components?.length && !isRendering && !renderErrorMessage">
+    <div class="empty-content">
+      <mat-icon class="empty-icon">view_module</mat-icon>
+      <h3 class="empty-title">No Components</h3>
+      <p class="empty-message">No components to display. Upload a document to get started.</p>
+    </div>
+  </div>
+
+  <!-- Components Container with Card-Based Grid Layout -->
+  <div class="components-container" 
+       [class.hidden]="isRendering || renderErrorMessage"
+       #dynamicContainer>
+    <!-- Dynamic components will be inserted here by Angular -->
+  </div>
+
+  <!-- Render Summary (when not in loading/error state) -->
+  <div class="render-summary" 
+       *ngIf="hasComponents() && !isRendering && !renderErrorMessage && !showDebugInfo">
+    <div class="summary-content">
+      <span class="summary-text">
+        {{ renderStats.totalComponents }} component{{ renderStats.totalComponents !== 1 ? 's' : '' }} rendered
+      </span>
+      <span class="summary-time" *ngIf="renderStats.renderTime > 0">
+        in {{ renderStats.renderTime | number:'1.0-0' }}ms
+      </span>
+    </div>
+  </div>
+</div>

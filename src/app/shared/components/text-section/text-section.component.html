@@ -1,0 +1,129 @@
+<div class="text-section" 
+     [class]="displayMode + '-mode'"
+     [class.collapsible]="isCollapsible"
+     [class.expanded]="isExpanded"
+     [class.collapsed]="isCollapsible && !isExpanded"
+     [ngClass]="sentimentClass">
+
+  <!-- Component Header -->
+  <div class="text-section-header" (click)="isCollapsible ? toggleExpanded() : null">
+    <div class="header-content">
+      
+      <!-- Title and Description -->
+      <div class="title-section" *ngIf="hasTitle() || hasDescription()">
+        <h3 class="section-title" *ngIf="hasTitle()">
+          <mat-icon class="title-icon">article</mat-icon>
+          {{ getTitle() }}
+        </h3>
+        <p class="section-description" *ngIf="hasDescription()">
+          {{ data.description }}
+        </p>
+      </div>
+
+      <!-- Header Actions -->
+      <div class="header-actions" (click)="$event.stopPropagation()">
+        <!-- Copy Content Button -->
+        <button mat-icon-button 
+                class="action-button copy-button"
+                (click)="copyContent()"
+                matTooltip="Copy content">
+          <mat-icon>content_copy</mat-icon>
+        </button>
+
+        <!-- Expand/Collapse Button -->
+        <button mat-icon-button 
+                class="action-button toggle-button"
+                *ngIf="isCollapsible"
+                (click)="toggleExpanded()">
+          <mat-icon>{{ isExpanded ? 'expand_less' : 'expand_more' }}</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Metadata Bar -->
+    <div class="metadata-bar" *ngIf="shouldShowMetadata() && isExpanded">
+      <div class="metadata-items">
+        <span class="metadata-item" *ngIf="data.word_count">
+          <mat-icon class="metadata-icon">text_fields</mat-icon>
+          {{ data.word_count }} words
+        </span>
+        
+        <span class="metadata-item" *ngIf="getReadingTime() > 0">
+          <mat-icon class="metadata-icon">schedule</mat-icon>
+          {{ getReadingTime() }} min read
+        </span>
+        
+        <span class="metadata-item" *ngIf="data.last_updated">
+          <mat-icon class="metadata-icon">update</mat-icon>
+          {{ getFormattedLastUpdated() }}
+        </span>
+      </div>
+      
+      <!-- Sentiment Indicator -->
+      <div class="sentiment-indicator" *ngIf="data.sentiment && data.sentiment !== 'neutral'">
+        <mat-icon class="sentiment-icon" 
+                  [class.positive]="data.sentiment === 'positive'"
+                  [class.negative]="data.sentiment === 'negative'">
+          {{ data.sentiment === 'positive' ? 'sentiment_satisfied' : 'sentiment_dissatisfied' }}
+        </mat-icon>
+        <span class="sentiment-label">{{ data.sentiment }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="text-section-content" 
+       [class.hidden]="isCollapsible && !isExpanded">
+
+    <!-- Primary Text Content -->
+    <div class="primary-content" *ngIf="processedContent">
+      <div class="content-text" 
+           [innerHTML]="processedContent"
+           [class.truncated]="isTruncated">
+      </div>
+      
+      <!-- Truncation Indicator -->
+      <div class="truncation-notice" *ngIf="isTruncated">
+        <button class="expand-content-button"
+                (click)="toggleExpanded()">
+          <mat-icon>unfold_more</mat-icon>
+          Show full content
+        </button>
+      </div>
+    </div>
+
+    <!-- Key Points Section -->
+    <div class="key-points-section" *ngIf="hasKeyPoints() && isExpanded">
+      <h4 class="key-points-title">
+        <mat-icon class="section-icon">key</mat-icon>
+        Key Points
+      </h4>
+      
+      <ul class="key-points-list">
+        <li *ngFor="let point of data.key_points; let i = index; trackBy: trackByIndex"
+            class="key-point-item"
+            (click)="onKeyPointClick(point, i)">
+          
+          <mat-icon class="key-point-icon">fiber_manual_record</mat-icon>
+          <span class="key-point-text">{{ point }}</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-content" *ngIf="!processedContent && !hasKeyPoints()">
+      <mat-icon class="empty-icon">description</mat-icon>
+      <p class="empty-message">No content available</p>
+    </div>
+  </div>
+
+  <!-- Footer Information (minimal mode) -->
+  <div class="text-section-footer" *ngIf="displayMode === 'minimal' && shouldShowMetadata()">
+    <div class="footer-metadata">
+      <span class="quick-stats">
+        {{ data.word_count || 0 }} words
+        <span *ngIf="getReadingTime() > 0"> • {{ getReadingTime() }} min</span>
+      </span>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,215 @@
+<div class="alert-list-component" 
+     [ngClass]="{'expanded': isExpanded, 'compact': !isExpanded}">
+  
+  <!-- Component Header -->
+  <div class="component-header">
+    <div class="title-section">
+      <mat-icon class="component-icon">report_problem</mat-icon>
+      <h2 class="component-title">{{ data?.title || 'Alerts & Issues' }}</h2>
+      <span class="alert-count" *ngIf="data?.alerts?.length">
+        {{ formatCount(data?.alerts?.length || 0, 'item', 'items') }}
+      </span>
+    </div>
+
+    <div class="header-actions">
+      <!-- Expand/Collapse Button -->
+      <button mat-icon-button 
+              [matTooltip]="isExpanded ? 'Collapse' : 'Expand'"
+              (click)="toggleExpanded()">
+        <mat-icon>{{ isExpanded ? 'unfold_less' : 'unfold_more' }}</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Component Description (if provided) -->
+  <div class="component-description" *ngIf="data?.description">
+    <p>{{ data?.description }}</p>
+  </div>
+
+  <!-- Severity Breakdown -->
+  <div class="severity-breakdown" *ngIf="isExpanded && data?.severity_breakdown">
+    <div class="breakdown-header">
+      <h3>Severity Breakdown</h3>
+    </div>
+    <div class="breakdown-grid">
+      <div class="severity-item severity-critical" *ngIf="data?.severity_breakdown?.critical">
+        <span class="severity-label">Critical</span>
+        <span class="severity-count">{{ data?.severity_breakdown?.critical }}</span>
+      </div>
+      <div class="severity-item severity-high" *ngIf="data?.severity_breakdown?.high">
+        <span class="severity-label">High</span>
+        <span class="severity-count">{{ data?.severity_breakdown?.high }}</span>
+      </div>
+      <div class="severity-item severity-medium" *ngIf="data?.severity_breakdown?.medium">
+        <span class="severity-label">Medium</span>
+        <span class="severity-count">{{ data?.severity_breakdown?.medium }}</span>
+      </div>
+      <div class="severity-item severity-low" *ngIf="data?.severity_breakdown?.low">
+        <span class="severity-label">Low</span>
+        <span class="severity-count">{{ data?.severity_breakdown?.low }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alert Filters -->
+  <div class="alert-filters">
+    <div class="filter-buttons">
+      <button mat-stroked-button 
+              [ngClass]="{'active': currentFilter === 'all'}"
+              (click)="applyFilter('all')">
+        All
+      </button>
+      <button mat-stroked-button 
+              [ngClass]="{'active': currentFilter === 'critical'}"
+              (click)="applyFilter('critical')"
+              *ngIf="groupedAlerts['critical']?.length">
+        Critical
+      </button>
+      <button mat-stroked-button 
+              [ngClass]="{'active': currentFilter === 'high'}"
+              (click)="applyFilter('high')"
+              *ngIf="groupedAlerts['high']?.length">
+        High
+      </button>
+      <button mat-stroked-button 
+              [ngClass]="{'active': currentFilter === 'medium'}"
+              (click)="applyFilter('medium')"
+              *ngIf="groupedAlerts['medium']?.length">
+        Medium
+      </button>
+      <button mat-stroked-button 
+              [ngClass]="{'active': currentFilter === 'low'}"
+              (click)="applyFilter('low')"
+              *ngIf="groupedAlerts['low']?.length">
+        Low
+      </button>
+    </div>
+
+    <div class="filter-actions">
+      <button mat-button 
+              color="primary"
+              (click)="toggleAllDescriptions()">
+        {{ showAllDescriptions ? 'Hide All Details' : 'Show All Details' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!filteredAlerts?.length">
+    <mat-icon class="empty-icon">sentiment_satisfied</mat-icon>
+    <p class="empty-message">
+      No alerts {{ currentFilter !== 'all' ? 'with ' + currentFilter + ' severity' : '' }} found.
+    </p>
+  </div>
+
+  <!-- Alerts List - Now in Grid Layout -->
+  <div class="alerts-container" *ngIf="filteredAlerts?.length">
+    <div class="alert-card" 
+         *ngFor="let alert of filteredAlerts"
+         [ngClass]="[getSeverityClass(alert.severity), getStatusClass(alert.status)]">
+      
+      <div class="alert-header" (click)="toggleDescription(alert.id)">
+        <div class="alert-type-icon">
+          <mat-icon [matTooltip]="alert.type">{{ getAlertTypeIcon(alert.type) }}</mat-icon>
+        </div>
+        
+        <div class="alert-info">
+          <h3 class="alert-title">{{ alert.title }}</h3>
+          <div class="alert-meta">
+            <span class="alert-severity" [ngClass]="getSeverityClass(alert.severity)">
+              {{ alert.severity | titlecase }}
+            </span>
+            <span class="alert-status" *ngIf="alert.status" [ngClass]="getStatusClass(alert.status)">
+              {{ alert.status | titlecase }}
+            </span>
+            <span class="alert-date" *ngIf="alert.created_date">
+              {{ getRelativeTime(alert.created_date) }}
+            </span>
+            <span class="alert-owner" *ngIf="alert.owner">
+              {{ alert.owner }}
+            </span>
+          </div>
+        </div>
+        
+        <div class="alert-actions">
+          <button mat-icon-button [matTooltip]="expandedDescriptions.has(alert.id) ? 'Hide Details' : 'Show Details'">
+            <mat-icon>{{ expandedDescriptions.has(alert.id) ? 'expand_less' : 'expand_more' }}</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Alert Details (Expandable) -->
+      <div class="alert-details" *ngIf="expandedDescriptions.has(alert.id)">
+        <div class="alert-description" *ngIf="alert.description">
+          <h4>Description</h4>
+          <p>{{ alert.description }}</p>
+        </div>
+        
+        <div class="alert-mitigation" *ngIf="alert.mitigation">
+          <h4>Mitigation Plan</h4>
+          <p>{{ alert.mitigation }}</p>
+        </div>
+        
+        <div class="alert-due-date" *ngIf="alert.due_date">
+          <h4>Due Date</h4>
+          <p>{{ alert.due_date | date:'mediumDate' }}</p>
+        </div>
+        
+        <!-- Status Controls -->
+        <div class="status-controls">
+          <h4>Update Status</h4>
+          <div class="status-buttons">
+            <button mat-stroked-button 
+                    [ngClass]="{'active': alert.status === 'open'}"
+                    (click)="updateAlertStatus(alert.id, 'open')">
+              Open
+            </button>
+            <button mat-stroked-button 
+                    [ngClass]="{'active': alert.status === 'in_progress'}"
+                    (click)="updateAlertStatus(alert.id, 'in_progress')">
+              In Progress
+            </button>
+            <button mat-stroked-button 
+                    [ngClass]="{'active': alert.status === 'resolved'}"
+                    (click)="updateAlertStatus(alert.id, 'resolved')">
+              Resolved
+            </button>
+            <button mat-stroked-button 
+                    [ngClass]="{'active': alert.status === 'closed'}"
+                    (click)="updateAlertStatus(alert.id, 'closed')">
+              Closed
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Stats -->
+  <div class="component-footer" *ngIf="data?.alerts?.length && isExpanded">
+    <div class="footer-stats">
+      <div class="stat-item">
+        <span class="stat-label">Open:</span>
+        <span class="stat-value">{{ getStatusCount('open') }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">In Progress:</span>
+        <span class="stat-value">{{ getStatusCount('in_progress') }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Resolved:</span>
+        <span class="stat-value">{{ getStatusCount('resolved') }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Closed:</span>
+        <span class="stat-value">{{ getStatusCount('closed') }}</span>
+      </div>
+    </div>
+    
+    <div class="footer-info">
+      <span class="filter-info" *ngIf="currentFilter !== 'all'">
+        Filtered: {{ getFilteredCount() }} of {{ data?.alerts?.length }} alerts
+      </span>
+    </div>
+  </div>
+</div>

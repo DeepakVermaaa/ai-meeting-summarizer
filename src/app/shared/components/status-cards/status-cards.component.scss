@@ -1,0 +1,548 @@
+.status-cards-component {
+    width: 100%;
+    margin-bottom: 1.5rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    
+    // Glassmorphism effect
+    &.glass-container {
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    // Expanded state
+    &.expanded {
+      .component-header {
+        padding: 1.25rem 1.5rem;
+      }
+      
+      .cards-container {
+        max-height: 800px; // Allow plenty of room when expanded
+      }
+    }
+    
+    // Compact state
+    &.compact {
+      .component-header {
+        padding: 0.75rem 1rem;
+      }
+      
+      .cards-container {
+        max-height: 300px; // Limit height when compact
+      }
+      
+      .component-footer,
+      .status-controls {
+        display: none; // Hide extra elements in compact mode
+      }
+    }
+  }
+  
+  // Component Header
+  .component-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    
+    .title-section {
+      display: flex;
+      align-items: center;
+      
+      .component-icon {
+        margin-right: 0.75rem;
+        color: rgba(139, 195, 74, 0.9); // Light green color
+      }
+      
+      .component-title {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 500;
+      }
+      
+      .card-count {
+        margin-left: 0.75rem;
+        font-size: 0.9rem;
+        opacity: 0.7;
+        background: rgba(0, 0, 0, 0.1);
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+      }
+    }
+  }
+  
+  // Component Description
+  .component-description {
+    padding: 0.5rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.9rem;
+    opacity: 0.8;
+  }
+  
+  // Status Controls
+  .status-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    
+    .control-label {
+      font-size: 0.9rem;
+      opacity: 0.7;
+      margin-right: 0.5rem;
+    }
+    
+    .layout-selector {
+      display: flex;
+      align-items: center;
+      
+      .layout-buttons {
+        display: flex;
+        
+        button {
+          &.active {
+            background: rgba(255, 255, 255, 0.2);
+          }
+        }
+      }
+    }
+    
+    .status-filter {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      
+      .filter-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        
+        button {
+          min-width: auto;
+          padding: 0 1rem;
+          font-size: 0.85rem;
+          
+          &.active {
+            background: rgba(255, 255, 255, 0.2);
+          }
+          
+          // Status-specific button colors
+          &.status-on-track {
+            border-color: rgba(76, 175, 80, 0.4); // Green
+          }
+          
+          &.status-at-risk {
+            border-color: rgba(255, 193, 7, 0.4); // Amber
+          }
+          
+          &.status-blocked {
+            border-color: rgba(244, 67, 54, 0.4); // Red
+          }
+          
+          &.status-completed {
+            border-color: rgba(33, 150, 243, 0.4); // Blue
+          }
+          
+          &.status-not-started {
+            border-color: rgba(158, 158, 158, 0.4); // Gray
+          }
+        }
+      }
+    }
+  }
+  
+  // Empty State
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    text-align: center;
+    
+    .empty-icon {
+      font-size: 3rem;
+      width: 3rem;
+      height: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.3;
+    }
+    
+    .empty-message {
+      font-size: 1rem;
+      opacity: 0.7;
+    }
+  }
+  
+  // Cards Container
+  .cards-container {
+    overflow-y: auto;
+    padding: 1rem;
+    
+    // Custom scrollbar
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+    
+    // Grid Layout
+    &.grid-layout {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    
+    // Row Layout
+    &.row-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+  }
+  
+  // Status Card
+  .status-card {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    // Status-specific styling
+    &.status-on-track {
+      border-left: 4px solid rgba(76, 175, 80, 0.8); // Green
+    }
+    
+    &.status-at-risk {
+      border-left: 4px solid rgba(255, 193, 7, 0.8); // Amber
+    }
+    
+    &.status-blocked {
+      border-left: 4px solid rgba(244, 67, 54, 0.8); // Red
+    }
+    
+    &.status-completed {
+      border-left: 4px solid rgba(33, 150, 243, 0.8); // Blue
+      opacity: 0.85; // Slightly fade completed items
+    }
+    
+    &.status-not-started {
+      border-left: 4px solid rgba(158, 158, 158, 0.8); // Gray
+    }
+    
+    // Color classes (for overriding default status colors)
+    &.color-green {
+      border-left-color: rgba(76, 175, 80, 0.8); // Green
+    }
+    
+    &.color-yellow {
+      border-left-color: rgba(255, 193, 7, 0.8); // Yellow
+    }
+    
+    &.color-red {
+      border-left-color: rgba(244, 67, 54, 0.8); // Red
+    }
+    
+    &.color-blue {
+      border-left-color: rgba(33, 150, 243, 0.8); // Blue
+    }
+    
+    &.color-gray {
+      border-left-color: rgba(158, 158, 158, 0.8); // Gray
+    }
+    
+    // Card Header
+    .card-header {
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      cursor: pointer;
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+      
+      .status-icon {
+        margin-right: 0.75rem;
+        
+        mat-icon {
+          font-size: 1.25rem;
+          width: 1.25rem;
+          height: 1.25rem;
+          opacity: 0.8;
+        }
+      }
+      
+      .card-title-section {
+        flex: 1;
+        
+        .card-title {
+          margin: 0 0 0.25rem 0;
+          font-size: 1rem;
+          font-weight: 500;
+        }
+        
+        .card-status {
+          font-size: 0.8rem;
+          opacity: 0.7;
+          padding: 0.1rem 0.5rem;
+          border-radius: 12px;
+          background: rgba(0, 0, 0, 0.1);
+          display: inline-block;
+        }
+      }
+    }
+    
+    // Card Value
+    .card-value {
+      padding: 0 1rem;
+      font-size: 1.5rem;
+      font-weight: 500;
+      margin-bottom: 0.75rem;
+    }
+    
+    // Card Progress
+    .card-progress {
+      padding: 0 1rem 1rem;
+      
+      .progress-text {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.35rem;
+        font-size: 0.8rem;
+        
+        .progress-label {
+          opacity: 0.7;
+        }
+        
+        .progress-value {
+          font-weight: 500;
+        }
+      }
+    }
+    
+    // Card Details
+    .card-details {
+      padding: 0 1rem 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.02);
+      
+      // Card Description
+      .card-description {
+        margin: 1rem 0;
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+      
+      // Details List
+      .details-list {
+        margin: 1rem 0;
+        
+        .detail-item {
+          display: flex;
+          margin-bottom: 0.5rem;
+          font-size: 0.85rem;
+          
+          .detail-key {
+            width: 40%;
+            opacity: 0.7;
+          }
+          
+          .detail-value {
+            flex: 1;
+            font-weight: 500;
+          }
+        }
+      }
+      
+      // Last Updated
+      .last-updated {
+        margin: 1rem 0;
+        font-size: 0.8rem;
+        
+        .updated-label {
+          opacity: 0.7;
+          margin-right: 0.5rem;
+        }
+      }
+      
+      // Status Controls
+      .status-controls {
+        margin: 1rem 0;
+        
+        h4 {
+          font-size: 0.9rem;
+          margin: 0 0 0.5rem 0;
+          font-weight: 500;
+          opacity: 0.8;
+        }
+        
+        .status-buttons {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+          
+          button {
+            min-width: auto;
+            padding: 0 0.75rem;
+            font-size: 0.8rem;
+            line-height: 28px;
+            
+            &.active {
+              background: rgba(255, 255, 255, 0.2);
+            }
+          }
+        }
+      }
+      
+      // Progress Update
+      .progress-update {
+        margin: 1rem 0;
+        
+        h4 {
+          font-size: 0.9rem;
+          margin: 0 0 0.5rem 0;
+          font-weight: 500;
+          opacity: 0.8;
+        }
+        
+        .progress-inputs {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          
+          .progress-field {
+            width: 100px;
+            margin-bottom: -1.25em;
+            
+            ::ng-deep {
+              .mat-form-field-wrapper {
+                padding-bottom: 0;
+              }
+              
+              .mat-form-field-flex {
+                padding: 0 0.5em;
+              }
+              
+              .mat-form-field-infix {
+                padding: 0.5em 0;
+                border-top: 0.5em solid transparent;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // Component Footer
+  .component-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.85rem;
+    
+    .footer-stats {
+      display: flex;
+      gap: 1rem;
+      
+      .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        
+        .stat-label {
+          opacity: 0.7;
+        }
+        
+        .stat-value {
+          font-weight: 500;
+        }
+      }
+    }
+    
+    .footer-info {
+      opacity: 0.7;
+      
+      .filter-info {
+        font-size: 0.8rem;
+      }
+    }
+  }
+  
+  // Responsive adjustments
+  @media (max-width: 768px) {
+    .status-controls {
+      flex-direction: column;
+      align-items: flex-start;
+      
+      .layout-selector,
+      .status-filter {
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+    }
+    
+    .cards-container {
+      &.grid-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .component-footer {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+    
+    .status-buttons,
+    .progress-inputs {
+      flex-direction: column;
+      align-items: flex-start;
+      
+      button {
+        width: 100%;
+      }
+    }
+  }
+  
+  // Animation for expand/collapse
+  @keyframes slideDown {
+    from { max-height: 0; opacity: 0; }
+    to { max-height: 800px; opacity: 1; }
+  }
+  
+  @keyframes slideUp {
+    from { max-height: 800px; opacity: 1; }
+    to { max-height: 0; opacity: 0; }
+  }
+  
+  // Accessibility improvements
+  .status-cards-component {
+    &:focus-within {
+      outline: 2px solid rgba(33, 150, 243, 0.5);
+      outline-offset: 2px;
+    }
+  }
