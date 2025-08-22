@@ -22,12 +22,9 @@ An intelligent application that analyzes meeting documents and presents interact
 
 ## Installation
 
-1. Clone the repository:
-
-2. Install dependencies:
-3. 3. Start the development server:
-
-
+1. Clone the repository
+2. Install dependencies
+3. Start the development server:
 4. Open your browser to `http://localhost:4200`
 
 ## Usage
