@@ -1,27 +1,47 @@
-# AiMeetingSummarizer
+# MeetingLens: AI-Powered Meeting Analysis Tool
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.0.2.
+An intelligent application that analyzes meeting documents and presents interactive summaries, action items, and insights.
 
-## Development server
+## Features
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+- AI-powered document analysis for meeting minutes and notes
+- Interactive dual-panel interface with chat functionality
+- Dynamic component display for meeting summaries, tasks, and alerts
+- Real-time filtering and sorting of meeting action items
+- Responsive design for desktop and mobile use
+- Expandable/collapsible sections for efficient information review
+- Visual status tracking for tasks and project risks
 
-## Code scaffolding
+## Technologies
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+- Angular framework
+- TypeScript
+- Material Design components
+- Responsive CSS with Flexbox/Grid
+- Dynamic component system
 
-## Build
+## Installation
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+1. Clone the repository:
 
-## Running unit tests
+2. Install dependencies:
+3. 3. Start the development server:
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
 
-## Running end-to-end tests
+4. Open your browser to `http://localhost:4200`
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+## Usage
 
-## Further help
+1. Upload a meeting document (PDF format)
+2. The system will analyze the document and generate interactive components
+3. Use the chat interface to ask questions about the meeting
+4. Interact with the generated components to track action items and issues
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+## Screenshots
+
+[Add screenshots of your application here]
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
